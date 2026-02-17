@@ -1,9 +1,11 @@
 import { ChannelSelector } from "../components/ChannelSelector";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 export default function Settings() {
   const { isSupported, isSubscribed, subscribe } = usePushNotifications();
+  const { signOut } = useAuthActions();
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6">
@@ -46,6 +48,18 @@ export default function Settings() {
             )}
           </section>
         )}
+
+        <section>
+          <h2 className="text-base font-medium text-[var(--text)] mb-4">
+            Account
+          </h2>
+          <button
+            onClick={() => signOut()}
+            className="w-full py-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] font-medium min-h-[44px] hover:opacity-90"
+          >
+            Sign out
+          </button>
+        </section>
       </div>
     </main>
   );

@@ -5,6 +5,7 @@ import {
   internalMutation,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { rag, ADMIN_DOCS_NAMESPACE } from "./rag";
 
 export const getTask = internalQuery({
   args: { taskId: v.id("tasks") },
@@ -43,10 +44,25 @@ export const generateContentForChannels = action({
     if (userChannels.length === 0) {
       return { generated: false, message: "No channels configured" };
     }
+    let ragContext = "";
+    try {
+      const searchResult = await rag.search(ctx, {
+        namespace: ADMIN_DOCS_NAMESPACE,
+        query: args.concept,
+        limit: 5,
+      });
+      if (searchResult.text?.trim()) {
+        ragContext = `\n\nRelevant context from knowledge base:\n${searchResult.text}`;
+      }
+    } catch (_e) {
+      // RAG optional - continue without context
+    }
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error("OPENROUTER_API_KEY not set");
     const model = "meta-llama/llama-3.2-3b-instruct:free";
-    const prompt = `Generate platform-tailored content for ${userChannels.join(", ")}. Concept: ${args.concept}. For each platform, provide a short caption (1-2 sentences) optimized for that platform's style.`;
+    const prompt = `Generate platform-tailored content for ${userChannels.join(", ")}. Concept: ${args.concept}.${ragContext}
+
+For each platform, provide a short caption (1-2 sentences) optimized for that platform's style.`;
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {

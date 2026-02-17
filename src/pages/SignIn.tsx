@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { ConvexError } from "convex/values";
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const [step, setStep] = useState<"signIn" | "signUp">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -18,9 +20,18 @@ export default function SignIn() {
       formData.set("email", email);
       formData.set("password", password);
       formData.set("flow", step);
+      if (step === "signUp" && name.trim()) formData.set("name", name.trim());
       await signIn("password", formData);
+      setLoading(true);
+      return;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
+      const msg =
+        err instanceof ConvexError
+          ? (err.data as { message?: string })?.message ?? String(err)
+          : err instanceof Error
+            ? err.message
+            : "Sign in failed";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -40,8 +51,20 @@ export default function SignIn() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="email"
             className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] placeholder-[var(--muted)] min-h-[44px]"
           />
+          {step === "signUp" && (
+            <input
+              type="text"
+              name="name"
+              placeholder="Name (optional)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="name"
+              className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] placeholder-[var(--muted)] min-h-[44px]"
+            />
+          )}
           <input
             type="password"
             name="password"
@@ -50,6 +73,7 @@ export default function SignIn() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
+            autoComplete={step === "signIn" ? "current-password" : "new-password"}
             className="w-full px-4 py-3 rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--text)] placeholder-[var(--muted)] min-h-[44px]"
           />
           {error && (
@@ -60,7 +84,7 @@ export default function SignIn() {
             disabled={loading}
             className="w-full py-3 rounded-lg bg-[var(--accent)] text-white font-medium min-h-[44px] hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "..." : step === "signIn" ? "Sign in" : "Sign up"}
+            {loading ? "Signing in..." : step === "signIn" ? "Sign in" : "Sign up"}
           </button>
         </form>
         <button

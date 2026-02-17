@@ -9,4 +9,10 @@ crons.interval(
   internal.agent.processPendingTasks
 );
 
+crons.interval(
+  "daily workflow - create channel tasks",
+  { minutes: 15 },
+  internal.agent.runDailyWorkflow
+);
+
 export default crons;

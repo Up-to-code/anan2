@@ -46,16 +46,21 @@ export const create = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
     const userIdStr = userId as string;
+    const user = await ctx.db.get(userId);
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const isAdmin = user?.role === "admin" || (user?.email && adminEmails.includes(user.email.toLowerCase()));
+    if (!isAdmin) throw new Error("Only admins can create tasks. Use the Admin panel.");
     const now = Date.now();
     const taskId = await ctx.db.insert("tasks", {
-      userId: userIdStr,
-      assigneeId: args.assigneeId,
+      userId: args.assigneeId ?? userIdStr,
+      assigneeId: args.assigneeId ?? userIdStr,
       title: args.title,
       description: args.description,
       status: "pending",
       dueAt: args.dueAt,
       createdAt: now,
       nextReminderAt: args.dueAt,
+      reminderStep: 0,
     });
     return taskId;
   },

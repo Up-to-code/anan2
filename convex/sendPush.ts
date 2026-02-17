@@ -8,6 +8,7 @@ export const sendPushNotification = action({
     subscription: v.any(),
     title: v.string(),
     body: v.string(),
+    url: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
     const webpush = await import("web-push");
@@ -21,12 +22,14 @@ export const sendPushNotification = action({
       publicKey,
       privateKey
     );
+    const payload: { title: string; body: string; url?: string } = {
+      title: args.title,
+      body: args.body,
+    };
+    if (args.url) payload.url = args.url;
     await webpush.sendNotification(
       args.subscription,
-      JSON.stringify({
-        title: args.title,
-        body: args.body,
-      }),
+      JSON.stringify(payload),
       {
         TTL: 86400,
       }

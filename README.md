@@ -60,3 +60,7 @@ npm run dev
 
 - `convex/` - Backend (auth, tasks, channels, push, agent, admin, RAG, crons)
 - `src/pages/` - Dashboard, TaskDetail, Settings, Admin, SignIn
+
+## Project links
+
+[Source](https://github.com/Up-to-code/anan2) · [Issues](https://github.com/Up-to-code/anan2/issues) · [Public project directory](https://github.com/qentrah/.github/blob/main/profile/PROJECTS.md)
